@@ -51,7 +51,6 @@ def make_buffer_if_needed():
     buffer = weechat.buffer_search("", BUFFER_NAME)
     if buffer is None or buffer == "":
         buffer = weechat.buffer_new(BUFFER_NAME, "", "", "", "")
-    print(weechat.buffer_get_string(buffer, "name"))
     return buffer
 
 
@@ -110,7 +109,7 @@ def nethack_hook(data, line):
 if __name__ == '__main__' and import_ok and \
         weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
                          SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
-    hook = weechat.hook_line("", "irc.freenode.#hardfought", "nick_Beholder",
+    hook = weechat.hook_line("", "*#hardfought", "nick_Beholder",
                              "hardfought_hook", "")
-    hook = weechat.hook_line("", "irc.freenode.#NetHack", "nick_Rodney",
+    hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
                              "nethack_hook", "")
