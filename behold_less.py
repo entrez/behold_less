@@ -31,12 +31,12 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 # set min_turn or min_points to "" to disable showing events fitting that rule
 # always_show_users: always show events from users in this comma-delimited list
 # buffer_name: set to "" in order to hide filtered messages entirely
-options = { "min_turn": "20000",
-            "min_points": "40000",
-            "always_show_users": "",
-            "buffer_name": "behold_less" }
+options = {"min_turn": "20000",
+           "min_points": "40000",
+           "always_show_users": "",
+           "buffer_name": "behold_less"}
 
-beholder_re = re.compile("\[[^\]]*\] \[.*[0-9](?P<variant>[A-Za-z]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*), on T:(?P<eventturn>[0-9]*))")
+beholder_re = re.compile("\[[^\]]*\] \[(.*[0-9])?(?P<variant>[A-Za-z]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*), on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
 ascension_re = re.compile("ascended")
@@ -71,8 +71,7 @@ def hardfought_hook(data, line):
     if line_info is None:
         return weechat.WEECHAT_RC_OK
     user = line_info.group("user")
-    if user in [user.strip() for user in
-                options["always_show_users"].split(",")]:
+    if user in [u.strip() for u in options["always_show_users"].split(",")]:
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
         turn = int(line_info.group("eventturn"))
@@ -103,8 +102,7 @@ def nethack_hook(data, line):
     if line_info is None:
         return weechat.WEECHAT_RC_OK
     user = line_info.group("user")
-    if user in [user.strip() for user in
-                options["always_show_users"].split(",")]:
+    if user in [u.strip() for u in options["always_show_users"].split(",")]:
         return weechat.WEECHAT_RC_OK
     turn = int(line_info.groupdict().get("endturn", 0))
     points = int(line_info.groupdict().get("points", 0))
@@ -124,7 +122,8 @@ if __name__ == '__main__' and import_ok and \
         weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
                          SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
     set_up_options()
-    weechat.hook_config("plugins.var.python." + SCRIPT_NAME + ".*", "config_hook", "")
+    weechat.hook_config("plugins.var.python.{}.*".format(SCRIPT_NAME),
+                        "config_hook", "")
     hook = weechat.hook_line("", "*#hardfought", "nick_Beholder",
                              "hardfought_hook", "")
     hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
