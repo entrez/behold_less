@@ -22,9 +22,9 @@ try:
 except ImportError:
     import_ok = False
 
-SCRIPT_NAME = "behold-less"
+SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.0.1"
+SCRIPT_VERSION = "0.0.2"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -34,7 +34,7 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 options = { "min_turn": "20000",
             "min_points": "40000",
             "always_show_users": "",
-            "buffer_name": "behold-less" }
+            "buffer_name": "behold_less" }
 
 beholder_re = re.compile("\[[^\]]*\] \[.*[0-9](?P<variant>[A-Za-z]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*), on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
