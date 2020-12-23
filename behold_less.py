@@ -34,6 +34,7 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 options = {"min_turn": "20000",
            "min_points": "40000",
            "always_show_users": "",
+           "always_show_variants": "",
            "buffer_name": "behold_less"}
 
 beholder_re = re.compile("\[[^\]]*\] \[(.*[0-9])?(?P<variant>[A-Za-z]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*), on T:(?P<eventturn>[0-9]*))")
@@ -67,11 +68,16 @@ def make_buffer_if_needed():
 def hardfought_hook(data, line):
     msg = line.get("message", "")
     line_info = beholder_re.match(msg)
-    # show unidentifiable messages by default
+    # show unidentifiable messages (e.g. responses to commands like !lastgame)
     if line_info is None:
         return weechat.WEECHAT_RC_OK
     user = line_info.group("user")
+    vrnt = line_info.group("variant")
+    # show message if user is in always_show_users list
     if user in [u.strip() for u in options["always_show_users"].split(",")]:
+        return weechat.WEECHAT_RC_OK
+    # show message if variant is in always_show_variants list
+    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")]:
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
         turn = int(line_info.group("eventturn"))
@@ -87,7 +93,7 @@ def hardfought_hook(data, line):
         # show all ascensions
         if ascension_re.search(event):
             return weechat.WEECHAT_RC_OK
-    # show late-game or high-point events and deaths
+    # show late-game or high-point events and deaths if configured to do so
     if (options["min_turn"] != "" and turn >= int(options["min_turn"])) \
             or (options["min_points"] != ""
                 and points >= int(options["min_points"])):
@@ -101,6 +107,7 @@ def nethack_hook(data, line):
     # show unidentifiable messages by default
     if line_info is None:
         return weechat.WEECHAT_RC_OK
+    # show message if user is in always_show_users list
     user = line_info.group("user")
     if user in [u.strip() for u in options["always_show_users"].split(",")]:
         return weechat.WEECHAT_RC_OK
