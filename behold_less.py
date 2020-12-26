@@ -74,10 +74,12 @@ def hardfought_hook(data, line):
     user = line_info.group("user")
     vrnt = line_info.group("variant")
     # show message if user is in always_show_users list
-    if user in [u.strip() for u in options["always_show_users"].split(",")]:
+    if user in [u.strip() for u in options["always_show_users"].split(",")
+                if u.strip() != ""]:
         return weechat.WEECHAT_RC_OK
     # show message if variant is in always_show_variants list
-    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")]:
+    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")
+                if v.strip() != ""]:
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
         turn = int(line_info.group("eventturn"))
@@ -109,7 +111,8 @@ def nethack_hook(data, line):
         return weechat.WEECHAT_RC_OK
     # show message if user is in always_show_users list
     user = line_info.group("user")
-    if user in [u.strip() for u in options["always_show_users"].split(",")]:
+    if user in [u.strip() for u in options["always_show_users"].split(",")
+                if u.strip() != ""]:
         return weechat.WEECHAT_RC_OK
     turn = int(line_info.groupdict().get("endturn", 0))
     points = int(line_info.groupdict().get("points", 0))
