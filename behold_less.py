@@ -38,7 +38,7 @@ options = {"min_turn": "20000",
            "buffer_name": "behold_less"}
 
 beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*),? on T:(?P<eventturn>[0-9]*))")
-rodney_re = re.compile("(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
+rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
 ascension_re = re.compile("ascended")
 
