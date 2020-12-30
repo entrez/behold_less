@@ -28,6 +28,7 @@ SCRIPT_VERSION = "0.0.3"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
+
 # set min_turn or min_points to "" to disable showing events fitting that rule
 # always_show_users: always show events from users in this comma-delimited list
 # always_show_wishes: always show wishes ("on"/"off")
@@ -39,10 +40,22 @@ options = {"min_turn": "20000",
            "always_show_wishes": "on",
            "buffer_name": "behold_less"}
 
+# show debug messages
+DEBUG = False
+
 beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
 ascension_re = re.compile("ascended")
+
+
+def option_on(opt):
+    return options.get(opt, "").strip() == "on"
+
+
+def debug_print(msg, *args, **kwargs):
+    if DEBUG:
+        print(msg.format(*args), **kwargs)
 
 
 def set_up_options():
@@ -72,16 +85,19 @@ def hardfought_hook(data, line):
     line_info = beholder_re.match(msg)
     # show unidentifiable messages (e.g. responses to commands like !lastgame)
     if line_info is None:
+        debug_print("OK because no regex match: {}", msg)
         return weechat.WEECHAT_RC_OK
     user = line_info.group("user")
     vrnt = line_info.group("variant")
     # show message if user is in always_show_users list
     if user in [u.strip() for u in options["always_show_users"].split(",")
                 if u.strip() != ""]:
+        debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
     # show message if variant is in always_show_variants list
     if vrnt in [v.strip() for v in options["always_show_variants"].split(",")
                 if v.strip() != ""]:
+        debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
         turn = int(line_info.group("eventturn"))
@@ -89,7 +105,8 @@ def hardfought_hook(data, line):
         event = line_info.group("event")
         # if the event involves wishing, show it regardless of turn count if
         # always_show_wishes is on
-        if options["always_show_wishes"] == "on" and wish_re.match(event):
+        if option_on("always_show_wishes") and wish_re.match(event):
+            debug_print("OK because wish (\"{}\"): {}", event, msg)
             return weechat.WEECHAT_RC_OK
     else:
         turn = int(line_info.groupdict().get("endturn", 0))
@@ -97,11 +114,17 @@ def hardfought_hook(data, line):
         event = line_info.group("reason")
         # show all ascensions
         if ascension_re.search(event):
+            debug_print("OK because ascension (\"{}\"): {}", event, msg)
             return weechat.WEECHAT_RC_OK
-    # show late-game or high-point events and deaths if configured to do so
-    if (options["min_turn"] != "" and turn >= int(options["min_turn"])) \
-            or (options["min_points"] != ""
-                and points >= int(options["min_points"])):
+    # show late-game events and deaths if configured to do so
+    if options["min_turn"] != "" and turn >= int(options["min_turn"]):
+        debug_print("OK because turn {} >= {}: {}",
+                    turn, options["min_turn"], msg)
+        return weechat.WEECHAT_RC_OK
+    # likewise for high-point events and deaths
+    if options["min_points"] != "" and points >= int(options["min_points"]):
+        debug_print("OK because points {} >= {}: {}",
+                    points, options["min_points"], msg)
         return weechat.WEECHAT_RC_OK
     return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
 
@@ -109,24 +132,38 @@ def hardfought_hook(data, line):
 def nethack_hook(data, line):
     msg = line.get("message", "")
     line_info = rodney_re.match(msg)
-    # show unidentifiable messages by default
+    # show unidentifiable messages
     if line_info is None:
+        debug_print("OK because no regex match: {}", msg)
         return weechat.WEECHAT_RC_OK
     # show message if user is in always_show_users list
     user = line_info.group("user")
+    vrnt = line_info.group("variant")
     if user in [u.strip() for u in options["always_show_users"].split(",")
                 if u.strip() != ""]:
+        debug_print("OK because user {} allowed: {}", user, msg)
+        return weechat.WEECHAT_RC_OK
+    # show message if variant is in always_show_variants list
+    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")
+                if v.strip() != ""]:
+        debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     turn = int(line_info.groupdict().get("endturn", 0))
     points = int(line_info.groupdict().get("points", 0))
     event = line_info.group("reason")
     # show all ascensions
     if ascension_re.search(event):
+        debug_print("OK because ascension (\"{}\"): {}", event, msg)
         return weechat.WEECHAT_RC_OK
     # show late-game deaths
-    if (options["min_turn"] != "" and turn >= int(options["min_turn"])) \
-            or (options["min_points"] != ""
-                and points >= int(options["min_points"])):
+    if options["min_turn"] != "" and turn >= int(options["min_turn"]):
+        debug_print("OK because turn {} >= {}: {}",
+                    turn, options["min_turn"], msg)
+        return weechat.WEECHAT_RC_OK
+    # show high-point deaths
+    if options["min_points"] != "" and points >= int(options["min_points"]):
+        debug_print("OK because points {} >= {}: {}",
+                    points, options["min_points"], msg)
         return weechat.WEECHAT_RC_OK
     return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
 
