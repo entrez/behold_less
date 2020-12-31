@@ -31,13 +31,16 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
 # set min_turn or min_points to "" to disable showing events fitting that rule
 # always_show_users: always show events from users in this comma-delimited list
+# always_show_variants: always show events from variants in this list
 # always_show_wishes: always show wishes ("on"/"off")
+# always_show_events: comma-delimited regexes that can match events
 # buffer_name: set to "" in order to hide filtered messages entirely
 options = {"min_turn": "20000",
            "min_points": "40000",
            "always_show_users": "",
            "always_show_variants": "",
            "always_show_wishes": "on",
+           "always_show_events": "",
            "buffer_name": "behold_less"}
 
 # show debug messages
@@ -107,6 +110,13 @@ def hardfought_hook(data, line):
         # always_show_wishes is on
         if option_on("always_show_wishes") and wish_re.match(event):
             debug_print("OK because wish (\"{}\"): {}", event, msg)
+            return weechat.WEECHAT_RC_OK
+        for show_regex in [r for r in options["always_show_events"].split(",")
+                           if r.strip() != ""]:
+            if re.search(show_regex, event) is None:
+                continue
+            debug_print("OK because event (\"{}\") matched '{}' in "
+                        "always_show_events: {}", event, show_regex, msg)
             return weechat.WEECHAT_RC_OK
     else:
         turn = int(line_info.groupdict().get("endturn", 0))
