@@ -70,6 +70,7 @@ def set_up_options():
 
 
 def config_hook(data, option, value):
+    _, option = option.rsplit(".", 1)
     options[option] = value
     return weechat.WEECHAT_RC_OK
 
