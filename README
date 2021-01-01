@@ -7,7 +7,7 @@ Description
 ==
 
 A Weechat plugin that allows you to move to a dedicated buffer, or hide
-entirely most spam messages from NetHack server announcement bots -- Beholder
+entirely, most spam messages from NetHack server announcement bots -- Beholder
 in #hardfought and Rodney in #NetHack.
 
 
