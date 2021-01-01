@@ -30,6 +30,8 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
 
 # set min_turn or min_points to "" to disable showing events fitting that rule
+#---# "always_show" causes events to be shown in the normal chat buffers,     #---#
+#---# instead of sending them into the behold_less buffer                     #---#
 # always_show_users: always show events from users in this comma-delimited list
 # always_show_variants: always show events from variants in this list
 # always_show_events: comma-delimited regexes that can match events
