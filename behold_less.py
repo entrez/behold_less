@@ -40,7 +40,7 @@ options = {"min_turn": "20000",
            "always_show_users": "",
            "always_show_variants": "",
            "always_show_wishes": "on",
-           "always_show_events": "",
+           "always_show_events": "ascended",
            "buffer_name": "behold_less"}
 
 # show debug messages
@@ -49,7 +49,6 @@ DEBUG = False
 beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
-ascension_re = re.compile("ascended")
 
 
 def option_on(opt):
@@ -112,6 +111,7 @@ def hardfought_hook(data, line):
         if option_on("always_show_wishes") and wish_re.match(event):
             debug_print("OK because wish (\"{}\"): {}", event, msg)
             return weechat.WEECHAT_RC_OK
+        # show any match to regexes in always_show_events
         for show_regex in [r for r in options["always_show_events"].split(",")
                            if r.strip() != ""]:
             if re.search(show_regex, event) is None:
@@ -123,9 +123,13 @@ def hardfought_hook(data, line):
         turn = int(line_info.groupdict().get("endturn", 0))
         points = int(line_info.groupdict().get("points", 0))
         event = line_info.group("reason")
-        # show all ascensions
-        if ascension_re.search(event):
-            debug_print("OK because ascension (\"{}\"): {}", event, msg)
+        # show any match to regexes in always_show_events
+        for show_regex in [r for r in options["always_show_events"].split(",")
+                           if r.strip() != ""]:
+            if re.search(show_regex, event) is None:
+                continue
+            debug_print("OK because event (\"{}\") matched '{}' in "
+                        "always_show_events: {}", event, show_regex, msg)
             return weechat.WEECHAT_RC_OK
     # show late-game events and deaths if configured to do so
     if options["min_turn"] != "" and turn >= int(options["min_turn"]):
@@ -162,9 +166,13 @@ def nethack_hook(data, line):
     turn = int(line_info.groupdict().get("endturn", 0))
     points = int(line_info.groupdict().get("points", 0))
     event = line_info.group("reason")
-    # show all ascensions
-    if ascension_re.search(event):
-        debug_print("OK because ascension (\"{}\"): {}", event, msg)
+    # show any match to regexes in always_show_events
+    for show_regex in [r for r in options["always_show_events"].split(",")
+                        if r.strip() != ""]:
+        if re.search(show_regex, event) is None:
+            continue
+        debug_print("OK because event (\"{}\") matched '{}' in "
+                    "always_show_events: {}", event, show_regex, msg)
         return weechat.WEECHAT_RC_OK
     # show late-game deaths
     if options["min_turn"] != "" and turn >= int(options["min_turn"]):
