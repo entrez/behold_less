@@ -57,7 +57,7 @@ default: ""
 
 always_show_events
 --
-don't redirect events that match one of the regular expressions in this list;
+Don't redirect events that match one of the regular expressions in this list;
 to include a comma in one of the regexes, you can escape it with a backslash:
 "foo\, bar,baz" will be parsed as [ "foo, bar", "baz" ].
 default: "^ascended$,(wished for|made (his|her|their) first( artifact)? wish)"
