@@ -32,15 +32,15 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 # set min_turn or min_points to "" to disable showing events fitting that rule
 # always_show_users: always show events from users in this comma-delimited list
 # always_show_variants: always show events from variants in this list
-# always_show_wishes: always show wishes ("on"/"off")
 # always_show_events: comma-delimited regexes that can match events
 # buffer_name: set to "" in order to hide filtered messages entirely
 options = {"min_turn": "20000",
            "min_points": "40000",
            "always_show_users": "",
            "always_show_variants": "",
-           "always_show_wishes": "on",
-           "always_show_events": "ascended",
+           "always_show_events": "^ascended$,"
+                                 "(wished for|made (his|her|their) "
+                                 "first( artifact)? wish)",
            "buffer_name": "behold_less"}
 
 # show debug messages
@@ -48,7 +48,6 @@ DEBUG = False
 
 beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
-wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
 comma_delimit = re.compile(r"(?<!\\),")
 
 
@@ -110,29 +109,18 @@ def hardfought_hook(data, line):
         turn = int(line_info.group("eventturn"))
         points = 0
         event = line_info.group("event")
-        # if the event involves wishing, show it regardless of turn count if
-        # always_show_wishes is on
-        if option_on("always_show_wishes") and wish_re.match(event):
-            debug_print("OK because wish (\"{}\"): {}", event, msg)
-            return weechat.WEECHAT_RC_OK
-        # show any match to regexes in always_show_events
-        for show_regex in get_option_list("always_show_events"):
-            if re.search(show_regex, event) is None:
-                continue
-            debug_print("OK because event (\"{}\") matched '{}' in "
-                        "always_show_events: {}", event, show_regex, msg)
-            return weechat.WEECHAT_RC_OK
     else:
         turn = int(line_info.groupdict().get("endturn", 0))
         points = int(line_info.groupdict().get("points", 0))
         event = line_info.group("reason")
-        # show any match to regexes in always_show_events
-        for show_regex in get_option_list("always_show_events"):
-            if re.search(show_regex, event) is None:
-                continue
-            debug_print("OK because event (\"{}\") matched '{}' in "
-                        "always_show_events: {}", event, show_regex, msg)
-            return weechat.WEECHAT_RC_OK
+    # show any match to regexes in always_show_events; by default this will
+    # catch wishes and ascensions
+    for show_regex in get_option_list("always_show_events"):
+        if re.search(show_regex, event) is None:
+            continue
+        debug_print("OK because event (\"{}\") matched '{}' in "
+                    "always_show_events: {}", event, show_regex, msg)
+        return weechat.WEECHAT_RC_OK
     # show late-game events and deaths if configured to do so
     if options["min_turn"] != "" and turn >= int(options["min_turn"]):
         debug_print("OK because turn {} >= {}: {}",
