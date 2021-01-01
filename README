@@ -1,0 +1,71 @@
+
+                 ░█▀▄░█▀▀░█░█░█▀█░█░░░█▀▄░░░░░█░░░█▀▀░█▀▀░█▀▀
+                 ░█▀▄░█▀▀░█▀█░█░█░█░░░█░█░░░░░█░░░█▀▀░▀▀█░▀▀█
+                 ░▀▀░░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀
+
+Description
+==
+
+A Weechat plugin that allows you to move to a dedicated buffer, or hide
+entirely most spam messages from NetHack server announcement bots -- Beholder
+in #hardfought and Rodney in #NetHack.
+
+
+Manual Installation
+==
+
+Behold_less requires you to have a Weechat installation with Python 3 enabled.
+Run the following to install:
+
+curl -o ~/.weechat/python/behold_less.py \
+    https://raw.githubusercontent.com/entrez/behold_less/master/behold_less.py
+ln -s ~/.weechat/python/behold_less.py ~/.weechat/python/autoload/
+
+
+Configuration
+==
+
+The rules for retaining messages in the regular channel can be customized via
+a set of plugin options. These are set via Weechat:
+
+    /set plugin.var.python.behold_less.<option>
+
+
+Options list
+==
+
+min_turn
+--
+Don't redirect or hide events at or above this turncount; set to "" to
+disable.
+default: "20000"
+
+min_points
+--
+Don't redirect events at or above this point count; set to "" to disable.
+default: "40000"
+
+always_show_users
+--
+Don't redirect events from users in this list.
+default: ""
+
+always_show_variants
+--
+Don't redirect events from variants in this list.
+default: ""
+
+always_show_events
+--
+don't redirect events that match one of the regular expressions in this list;
+to include a comma in one of the regexes, you can escape it with a backslash:
+"foo\, bar,baz" will be parsed as [ "foo, bar", "baz" ].
+default: "^ascended$,(wished for|made (his|her|their) first( artifact)? wish)"
+
+buffer_name
+--
+The name of the buffer where messages from Rodney and Beholder will be
+redirected. Can be set to "" in order to completely hide these messages,
+instead of redirecting them.
+default: "behold_less"
+
