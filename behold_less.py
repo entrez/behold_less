@@ -49,6 +49,12 @@ DEBUG = False
 beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 wish_re = re.compile("(?:wished for|made (?:his|her|their) first(?: artifact)? wish -) \"(?P<wish>.*)\"")
+comma_delimit = re.compile(r"(?<!\\),")
+
+
+def get_option_list(opt):
+    return [i.replace("\,", ",").strip() for i
+            in comma_delimit.split(options.get(opt, "")) if i.strip() != ""]
 
 
 def option_on(opt):
@@ -93,13 +99,11 @@ def hardfought_hook(data, line):
     user = line_info.group("user")
     vrnt = line_info.group("variant")
     # show message if user is in always_show_users list
-    if user in [u.strip() for u in options["always_show_users"].split(",")
-                if u.strip() != ""]:
+    if user in get_option_list("always_show_users"):
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
     # show message if variant is in always_show_variants list
-    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")
-                if v.strip() != ""]:
+    if vrnt in get_option_list("always_show_variants"):
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
@@ -112,8 +116,7 @@ def hardfought_hook(data, line):
             debug_print("OK because wish (\"{}\"): {}", event, msg)
             return weechat.WEECHAT_RC_OK
         # show any match to regexes in always_show_events
-        for show_regex in [r for r in options["always_show_events"].split(",")
-                           if r.strip() != ""]:
+        for show_regex in get_option_list("always_show_events"):
             if re.search(show_regex, event) is None:
                 continue
             debug_print("OK because event (\"{}\") matched '{}' in "
@@ -124,8 +127,7 @@ def hardfought_hook(data, line):
         points = int(line_info.groupdict().get("points", 0))
         event = line_info.group("reason")
         # show any match to regexes in always_show_events
-        for show_regex in [r for r in options["always_show_events"].split(",")
-                           if r.strip() != ""]:
+        for show_regex in get_option_list("always_show_events"):
             if re.search(show_regex, event) is None:
                 continue
             debug_print("OK because event (\"{}\") matched '{}' in "
@@ -154,21 +156,18 @@ def nethack_hook(data, line):
     # show message if user is in always_show_users list
     user = line_info.group("user")
     vrnt = line_info.group("variant")
-    if user in [u.strip() for u in options["always_show_users"].split(",")
-                if u.strip() != ""]:
+    if user in get_option_list("always_show_users"):
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
     # show message if variant is in always_show_variants list
-    if vrnt in [v.strip() for v in options["always_show_variants"].split(",")
-                if v.strip() != ""]:
+    if vrnt in get_option_list("always_show_variants"):
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     turn = int(line_info.groupdict().get("endturn", 0))
     points = int(line_info.groupdict().get("points", 0))
     event = line_info.group("reason")
     # show any match to regexes in always_show_events
-    for show_regex in [r for r in options["always_show_events"].split(",")
-                        if r.strip() != ""]:
+    for show_regex in get_option_list("always_show_events"):
         if re.search(show_regex, event) is None:
             continue
         debug_print("OK because event (\"{}\") matched '{}' in "
