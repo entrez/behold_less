@@ -46,9 +46,9 @@ options = {"min_turn": "20000",
            "buffer_name": "behold_less"}
 
 # show debug messages
-DEBUG = False
+DEBUG = True
 
-beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
+beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 comma_delimit = re.compile(r"(?<!\\),")
 
@@ -97,7 +97,9 @@ def hardfought_hook(data, line):
     if line_info is None:
         debug_print("OK because no regex match: {}", msg)
         return weechat.WEECHAT_RC_OK
-    user = line_info.group("user")
+    user = line_info.group("user2")
+    if user is None:
+        user = line_info.group("user")
     vrnt = line_info.group("variant")
     # show message if user is in always_show_users list
     if user in get_option_list("always_show_users"):
