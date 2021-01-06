@@ -48,7 +48,7 @@ options = {"min_turn": "20000",
 # show debug messages
 DEBUG = False
 
-beholder_re = re.compile("\[[^\]]*\] \[(.*?[0-9])?(?P<variant>[A-Za-z]*[0-9]*)[^\]]*\] (?P<user>\S*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
+beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>\S*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 comma_delimit = re.compile(r"(?<!\\),")
 
