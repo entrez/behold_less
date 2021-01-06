@@ -32,14 +32,16 @@ SCRIPT_DESC = "Hide Beholder and Rodney spam"
 # set min_turn or min_points to "" to disable showing events fitting that rule
 #---# "always_show" causes events to be shown in the normal chat buffers,     #---#
 #---# instead of sending them into the behold_less buffer                     #---#
-# always_show_users: always show events from users in this comma-delimited list
-# always_show_variants: always show events from variants in this list
+# show_users: always show events from users in this comma-delimited list; hide
+# events from users with a '!' prepended to their name
+# show_variants: always show events from variants in this list, hide events
+# from variants with a '!' prepended to their name
 # always_show_events: comma-delimited regexes that can match events
 # buffer_name: set to "" in order to hide filtered messages entirely
 options = {"min_turn": "20000",
            "min_points": "40000",
-           "always_show_users": "",
-           "always_show_variants": "",
+           "show_users": "",
+           "show_variants": "",
            "always_show_events": "^ascended$,"
                                  "(wished for|made (his|her|their) "
                                  "first( artifact)? wish)",
@@ -56,6 +58,14 @@ comma_delimit = re.compile(r"(?<!\\),")
 def get_option_list(opt):
     return [i.replace("\,", ",").strip() for i
             in comma_delimit.split(options.get(opt, "")) if i.strip() != ""]
+
+
+def get_dual_option_list(opt):
+    olist = get_option_list(opt)
+    good = [o for o in olist if not o.startswith("!")]
+    bad = [o[1:] for o in olist if o.startswith("!")
+                 and len(o) > 1]
+    return (good, bad)
 
 
 def option_on(opt):
@@ -101,12 +111,18 @@ def hardfought_hook(data, line):
     if user is None:
         user = line_info.group("user")
     vrnt = line_info.group("variant")
-    # show message if user is in always_show_users list
-    if user in get_option_list("always_show_users"):
+    # apply rules from show_users list
+    good_users, bad_users = get_dual_option_list("show_users")
+    if user in bad_users:
+        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    if user in good_users:
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
-    # show message if variant is in always_show_variants list
-    if vrnt in get_option_list("always_show_variants"):
+    # apply rules from show_variants list
+    good_variants, bad_variants = get_dual_option_list("show_variants")
+    if vrnt in bad_variants:
+        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    if vrnt in good_variants:
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     if line_info.group("eventturn") is not None:
@@ -145,14 +161,20 @@ def nethack_hook(data, line):
     if line_info is None:
         debug_print("OK because no regex match: {}", msg)
         return weechat.WEECHAT_RC_OK
-    # show message if user is in always_show_users list
     user = line_info.group("user")
     vrnt = line_info.group("variant")
-    if user in get_option_list("always_show_users"):
+    # apply rules from show_users list
+    good_users, bad_users = get_dual_option_list("show_users")
+    if user in bad_users:
+        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    if user in good_users:
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
-    # show message if variant is in always_show_variants list
-    if vrnt in get_option_list("always_show_variants"):
+    # apply rules from show_variants list
+    good_variants, bad_variants = get_dual_option_list("show_variants")
+    if vrnt in bad_variants:
+        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    if vrnt in good_variants:
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
     turn = int(line_info.groupdict().get("endturn", 0))
