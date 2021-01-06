@@ -45,14 +45,16 @@ min_points
 Don't redirect events at or above this point count; set to "" to disable.
 default: "40000"
 
-always_show_users
+show_users
 --
-Don't redirect events from users in this list.
+Always redirect events from users in this list prefaced with a '!'; for other
+users in this list, don't redirect events.
 default: ""
 
-always_show_variants
+show_variants
 --
-Don't redirect events from variants in this list.
+Always redirect events from variants in this list prefaced with a '!'; for
+other variants in this list, don't redirect events.
 default: ""
 
 always_show_events
