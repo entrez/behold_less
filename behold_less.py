@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.1"
+SCRIPT_VERSION = "0.1.2"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -42,7 +42,7 @@ options = {"min_turn": "20000",
            "min_points": "40000",
            "show_users": "",
            "show_variants": "",
-           "always_show_events": "^ascended$,"
+           "always_show_events": "^ascended,"
                                  "(wished for|made (his|her|their) "
                                  "first( artifact)? wish)",
            "buffer_name": "behold_less"}
