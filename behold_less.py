@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.2"
+SCRIPT_VERSION = "0.1.3"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -207,6 +207,8 @@ if __name__ == '__main__' and import_ok and \
     weechat.hook_config("plugins.var.python.{}.*".format(SCRIPT_NAME),
                         "config_hook", "")
     hook = weechat.hook_line("", "*#hardfought", "nick_Beholder",
+                             "hardfought_hook", "")
+    hook = weechat.hook_line("", "*#evilhack", "nick_EvilBot",
                              "hardfought_hook", "")
     hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
                              "nethack_hook", "")
