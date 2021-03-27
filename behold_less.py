@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.4"
+SCRIPT_VERSION = "0.1.5"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -50,7 +50,7 @@ options = {"min_turn": "20000",
 # show debug messages
 DEBUG = False
 
-beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*))")
+beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), ((?P<rt>rt\[[^\]]*\]), (?P<wc>wc\[[^\]]]*\]), )?(?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)| [^\]]*\[(?:chosen seed: .*|random seed)\])")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 comma_delimit = re.compile(r"(?<!\\),")
 
@@ -130,9 +130,13 @@ def hardfought_hook(data, line):
         points = 0
         event = line_info.group("event")
     else:
-        turn = int(line_info.groupdict().get("endturn", 0))
-        points = int(line_info.groupdict().get("points", 0))
+        turn = line_info.groupdict().get("endturn", 0)
+        turn = int(turn) if turn is not None else 0
+        points = line_info.groupdict().get("points", 0)
+        points = int(points) if points is not None else 0
         event = line_info.group("reason")
+        if event is None:
+            event = "setseed"
     # show any match to regexes in always_show_events; by default this will
     # catch wishes and ascensions
     for show_regex in get_option_list("always_show_events"):
