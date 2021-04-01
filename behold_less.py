@@ -107,6 +107,7 @@ def hardfought_hook(data, line):
     if line_info is None:
         debug_print("OK because no regex match: {}", msg)
         return weechat.WEECHAT_RC_OK
+    debug_print("Groups: {}", line_info.groupdict())
     user = line_info.group("user2")
     if user is None:
         user = line_info.group("user")
