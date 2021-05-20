@@ -213,7 +213,7 @@ if __name__ == '__main__' and import_ok and \
                         "config_hook", "")
     hook = weechat.hook_line("", "*#hardfought", "nick_Beholder",
                              "hardfought_hook", "")
-    hook = weechat.hook_line("", "*#evilhack", "nick_EvilBot",
+    hook = weechat.hook_line("", "*#evilhack", "nick_Hecubus",
                              "hardfought_hook", "")
     hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
                              "nethack_hook", "")
