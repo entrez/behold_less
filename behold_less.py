@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.7"
+SCRIPT_VERSION = "0.1.8"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -50,7 +50,7 @@ options = {"min_turn": "20000",
 # show debug messages
 DEBUG = False
 
-beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), ((?:(?:rt)?\[(?P<rt>[^\]]*)\]), ((?:wc\[(?P<wc>[^\]]*)\]), )?)?(?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)(?:, (?:rt)?\[[^\]]*\](?:, wc\[[^\]]*\])?)?| [^\]]*\[(?:chosen seed: .*|random seed)\])")
+beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+)(?: (?P<race>\S+))? (?P<gender>\S+)(?: (?P<alignment>\S+))?\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), ((?:(?:rt)?\[(?P<rt>[^\]]*)\]), ((?:wc\[(?P<wc>[^\]]*)\]), )?)?(?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)(?:, (?:rt)?\[[^\]]*\](?:, wc\[[^\]]*\])?)?| [^\]]*\[(?:chosen seed: .*|random seed)\])")
 rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 comma_delimit = re.compile(r"(?<!\\),")
 
