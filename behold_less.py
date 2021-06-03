@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.8"
+SCRIPT_VERSION = "0.1.9"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -51,7 +51,8 @@ options = {"min_turn": "20000",
 DEBUG = False
 
 beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+)(?: (?P<race>\S+))? (?P<gender>\S+)(?: (?P<alignment>\S+))?\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), ((?:(?:rt)?\[(?P<rt>[^\]]*)\]), ((?:wc\[(?P<wc>[^\]]*)\]), )?)?(?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)(?:, (?:rt)?\[[^\]]*\](?:, wc\[[^\]]*\])?)?| [^\]]*\[(?:chosen seed: .*|random seed)\])")
-rodney_re = re.compile("(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
+rodney_re = re.compile(r"(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
+junethack_re = re.compile(r"Junethack: (?:New user|Achievement \"(?P<achievement>[^\"]*)\" unlocked by) (?P<user>[^!]*)( registered)?!")
 comma_delimit = re.compile(r"(?<!\\),")
 
 
@@ -91,8 +92,8 @@ def config_hook(data, option, value):
     return weechat.WEECHAT_RC_OK
 
 
-def make_buffer_if_needed():
-    if len(options["buffer_name"]) == 0:
+def make_buffer_if_needed(show):
+    if len(options["buffer_name"]) == 0 or not show:
         return ""
     buffer = weechat.buffer_search("", options["buffer_name"])
     if buffer is None or buffer == "":
@@ -101,6 +102,7 @@ def make_buffer_if_needed():
 
 
 def hardfought_hook(data, line):
+    chn_ok = (line.get('buffer_name', "").lower().endswith("#hardfought"))
     msg = line.get("message", "")
     line_info = beholder_re.match(msg)
     # show unidentifiable messages (e.g. responses to commands like !lastgame)
@@ -115,14 +117,14 @@ def hardfought_hook(data, line):
     # apply rules from show_users list
     good_users, bad_users = get_dual_option_list("show_users")
     if user in bad_users:
-        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
     if user in good_users:
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
     # apply rules from show_variants list
     good_variants, bad_variants = get_dual_option_list("show_variants")
     if vrnt in bad_variants:
-        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
     if vrnt in good_variants:
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
@@ -156,7 +158,7 @@ def hardfought_hook(data, line):
         debug_print("OK because points {} >= {}: {}",
                     points, options["min_points"], msg)
         return weechat.WEECHAT_RC_OK
-    return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
 
 
 def nethack_hook(data, line):
@@ -171,14 +173,14 @@ def nethack_hook(data, line):
     # apply rules from show_users list
     good_users, bad_users = get_dual_option_list("show_users")
     if user in bad_users:
-        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+        return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
     if user in good_users:
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
     # apply rules from show_variants list
     good_variants, bad_variants = get_dual_option_list("show_variants")
     if vrnt in bad_variants:
-        return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+        return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
     if vrnt in good_variants:
         debug_print("OK because variant {} allowed: {}", vrnt, msg)
         return weechat.WEECHAT_RC_OK
@@ -202,12 +204,46 @@ def nethack_hook(data, line):
         debug_print("OK because points {} >= {}: {}",
                     points, options["min_points"], msg)
         return weechat.WEECHAT_RC_OK
-    return {"buffer": make_buffer_if_needed(), "notify_level": "-1"}
+    return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
+
+def junethack_hook(data, line):
+    chn_ok = (line.get('buffer_name', "").lower().endswith("#hardfought"))
+    msg = line.get("message", "")
+    line_info = junethack_re.match(msg)
+    # show unidentifiable messages
+    if line_info is None:
+        debug_print("OK because no regex match: {}", msg)
+        return weechat.WEECHAT_RC_OK
+    debug_print("Groups: {}", line_info.groupdict())
+    user = line_info.group("user")
+    achievement = line_info.group("achievement")
+
+    if achievement is None:
+        # new user registration
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
+
+    if (
+        achievement.startswith("Sightseeing")
+        or achievement.startswith("Globetrotter")
+    ):
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
+
+    good_users, bad_users = get_dual_option_list("show_users")
+    if user in bad_users:
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
+    if user in good_users:
+        debug_print("OK because user {} allowed: {}", user, msg)
+        return weechat.WEECHAT_RC_OK
+
+    debug_print("OK because default: {}", msg)
+    return weechat.WEECHAT_RC_OK
 
 
-if __name__ == '__main__' and import_ok and \
-        weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
-                         SCRIPT_LICENSE, SCRIPT_DESC, "", ""):
+if (
+    __name__ == '__main__' and import_ok
+    and weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
+                         SCRIPT_LICENSE, SCRIPT_DESC, "", "")
+):
     set_up_options()
     weechat.hook_config("plugins.var.python.{}.*".format(SCRIPT_NAME),
                         "config_hook", "")
@@ -217,3 +253,5 @@ if __name__ == '__main__' and import_ok and \
                              "hardfought_hook", "")
     hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
                              "nethack_hook", "")
+    hook = weechat.hook_line("", "*#NetHack,*#hardfought,*#junethack",
+                             "nick_Announcy", "junethack_hook", "")
