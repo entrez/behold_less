@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.9"
+SCRIPT_VERSION = "0.1.10"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -222,18 +222,19 @@ def junethack_hook(data, line):
         # new user registration
         return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
 
-    if (
-        achievement.startswith("Sightseeing")
-        or achievement.startswith("Globetrotter")
-    ):
-        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
-
     good_users, bad_users = get_dual_option_list("show_users")
     if user in bad_users:
         return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
     if user in good_users:
         debug_print("OK because user {} allowed: {}", user, msg)
         return weechat.WEECHAT_RC_OK
+
+
+    if (
+        achievement.startswith("Sightseeing")
+        or achievement.startswith("Globetrotter")
+    ):
+        return {"buffer": make_buffer_if_needed(chn_ok), "notify_level": "-1"}
 
     debug_print("OK because default: {}", msg)
     return weechat.WEECHAT_RC_OK
