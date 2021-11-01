@@ -24,7 +24,7 @@ except ImportError:
 
 SCRIPT_NAME = "behold_less"
 SCRIPT_AUTHOR = "Michael Meyer <me@entrez.cc>"
-SCRIPT_VERSION = "0.1.10"
+SCRIPT_VERSION = "0.1.11"
 SCRIPT_LICENSE = "GPL3"
 SCRIPT_DESC = "Hide Beholder and Rodney spam"
 
@@ -53,6 +53,7 @@ DEBUG = False
 beholder_re = re.compile(r"\[[^\]]*\] \[(?:\x19F\|[0-9]{2})(?P<variant>[^\x19]*)[^\]]*\] (?P<user>[^(]*)(?: \((?P<user2>\S*)\))? \((?P<class>\S+)(?: (?P<race>\S+))? (?P<gender>\S+)(?: (?P<alignment>\S+))?\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), ((?:(?:rt)?\[(?P<rt>[^\]]*)\]), ((?:wc\[(?P<wc>[^\]]*)\]), )?)?(?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)(?:, (?:rt)?\[[^\]]*\](?:, wc\[[^\]]*\])?)?| [^\]]*\[(?:chosen seed: .*|random seed)\])")
 rodney_re = re.compile(r"(?:\[(?P<variant>[^\]]*)\] )?(?P<user>\S*) \((?P<class>\S*) (?P<race>\S*) (?P<gender>\S*) (?P<alignment>\S*)\)(?:, (?P<points>[0-9]*) points, T:(?P<endturn>[0-9]*), (?P<reason>.*))")
 junethack_re = re.compile(r"Junethack: (?:New user|Achievement \"(?P<achievement>[^\"]*)\" unlocked by) (?P<user>[^!]*)( registered)?!")
+tnnt_re = re.compile(r"\[[^\]]*\] (?:\[[^\]]*\]: )?(?P<user>[^(]*) \((?P<class>\S+) (?P<race>\S+) (?P<gender>\S+) (?P<alignment>\S+)\)(?:, (?P<points>[0-9]*) points, (?P<endturn>[0-9]*) turns, (?P<reason>.*)| (?P<event>.*?),? on T:(?P<eventturn>[0-9]*)(?:, (?:rt)?\[[^\]]*\](?:, wc\[[^\]]*\])?)?| [^\]]*\[(?:chosen seed: .*|random seed)\])")
 comma_delimit = re.compile(r"(?<!\\),")
 
 
@@ -240,6 +241,62 @@ def junethack_hook(data, line):
     return weechat.WEECHAT_RC_OK
 
 
+def tnnt_hook(data, line):
+    msg = line.get("message", "")
+    line_info = tnnt_re.match(msg)
+    # show unidentifiable messages (e.g. responses to commands like !lastgame)
+    if line_info is None:
+        debug_print("OK because no regex match: {}", msg)
+        return weechat.WEECHAT_RC_OK
+    debug_print("Groups: {}", line_info.groupdict())
+    user = line_info.group("user")
+    # apply rules from show_users list
+    good_users, bad_users = get_dual_option_list("show_users")
+    if user in bad_users:
+        return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
+    if user in good_users:
+        debug_print("OK because user {} allowed: {}", user, msg)
+        return weechat.WEECHAT_RC_OK
+    vrnt = "tnnt"
+    good_variants, bad_variants = get_dual_option_list("show_variants")
+    if vrnt in bad_variants:
+        return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
+    if vrnt in good_variants:
+        debug_print("OK because variant {} allowed: {}", vrnt, msg)
+        return weechat.WEECHAT_RC_OK
+    if line_info.group("eventturn") is not None:
+        turn = int(line_info.group("eventturn"))
+        points = 0
+        event = line_info.group("event")
+    else:
+        turn = line_info.groupdict().get("endturn", 0)
+        turn = int(turn) if turn is not None else 0
+        points = line_info.groupdict().get("points", 0)
+        points = int(points) if points is not None else 0
+        event = line_info.group("reason")
+        if event is None:
+            event = "setseed"
+    # show any match to regexes in always_show_events; by default this will
+    # catch wishes and ascensions
+    for show_regex in get_option_list("always_show_events"):
+        if re.search(show_regex, event) is None:
+            continue
+        debug_print("OK because event (\"{}\") matched '{}' in "
+                    "always_show_events: {}", event, show_regex, msg)
+        return weechat.WEECHAT_RC_OK
+    # show late-game events and deaths if configured to do so
+    if options["min_turn"] != "" and turn >= int(options["min_turn"]):
+        debug_print("OK because turn {} >= {}: {}",
+                    turn, options["min_turn"], msg)
+        return weechat.WEECHAT_RC_OK
+    # likewise for high-point events and deaths
+    if options["min_points"] != "" and points >= int(options["min_points"]):
+        debug_print("OK because points {} >= {}: {}",
+                    points, options["min_points"], msg)
+        return weechat.WEECHAT_RC_OK
+    return {"buffer": make_buffer_if_needed(True), "notify_level": "-1"}
+
+
 if (
     __name__ == '__main__' and import_ok
     and weechat.register(SCRIPT_NAME, SCRIPT_AUTHOR, SCRIPT_VERSION,
@@ -252,7 +309,8 @@ if (
                              "hardfought_hook", "")
     hook = weechat.hook_line("", "*#evilhack", "nick_Hecubus",
                              "hardfought_hook", "")
-    hook = weechat.hook_line("", "*#NetHack", "nick_Rodney",
-                             "nethack_hook", "")
+    hook = weechat.hook_line("", "*#NetHack", "nick_Rodney", "nethack_hook",
+                             "")
     hook = weechat.hook_line("", "*#NetHack,*#hardfought,*#junethack",
                              "nick_Announcy", "junethack_hook", "")
+    hook = weechat.hook_line("", "*#tnnt", "nick_Croesus", "tnnt_hook", "")
