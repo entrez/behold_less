@@ -1,7 +1,7 @@
 
                  ░█▀▄░█▀▀░█░█░█▀█░█░░░█▀▄░░░░░█░░░█▀▀░█▀▀░█▀▀
-                 ░█▀▄░█▀▀░█▀█░█░█░█░░░█░█░▄▄▄░█░░░█▀▀░▀▀█░▀▀█
-                 ░▀▀░░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀░░░░░░▀▀▀░▀▀▀░▀▀▀░▀▀▀
+                 ░█▀▄░█▀▀░█▀█░█░█░█░░░█░█░░░░░█░░░█▀▀░▀▀█░▀▀█
+                 ░▀▀░░▀▀▀░▀░▀░▀▀▀░▀▀▀░▀▀░░▀▀▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀
 
 Description
 ==
@@ -14,12 +14,12 @@ in #hardfought and Rodney in #NetHack.
 Manual Installation
 ==
 
-Behold-less requires you to have a Weechat installation with Python 3 enabled.
+behold_less requires you to have a Weechat installation with Python 3 enabled.
 Run the following to install:
 
-curl -o ~/.weechat/python/behold-less.py \
-    https://raw.githubusercontent.com/entrez/behold-less/master/behold-less.py
-ln -s ~/.weechat/python/behold-less.py ~/.weechat/python/autoload/
+curl -o ~/.weechat/python/behold_less.py \
+    https://raw.githubusercontent.com/entrez/behold_less/master/behold_less.py
+ln -s ~/.weechat/python/behold_less.py ~/.weechat/python/autoload/
 
 
 Configuration
@@ -28,7 +28,7 @@ Configuration
 The rules for retaining messages in the regular channel can be customized via
 a set of plugin options. These are set via Weechat:
 
-    /set plugin.var.python.behold-less.<option>
+    /set plugin.var.python.behold_less.<option>
 
 
 Options list
