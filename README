@@ -8,7 +8,8 @@ Description
 
 A Weechat plugin that allows you to move to a dedicated buffer, or hide
 entirely, most spam messages from NetHack server announcement bots -- Beholder
-in #hardfought and Rodney in #NetHack.
+in #hardfought, Rodney in #NetHack, and the seasonal bots in #tnnt and
+#junethack.
 
 
 Manual Installation
